@@ -1,0 +1,46 @@
+CREATE PROCEDURE InsertPrenotazione
+	@CameraRif int,
+	@ClienteRif varchar,
+    @CheckOutIO Datetime,
+	@CheckInIO dateTime
+AS
+BEGIN
+    BEGIN TRY
+		BEGIN TRANSACTION
+			DECLARE @CheckIn datetime
+			DECLARE @checkOut datetime
+
+			SELECT @CheckIn = [check_in]
+			FROM Prenotazione
+			WHERE cameraRif = 1; 
+
+			SELECT @CheckOut = [check_out]
+			FROM Prenotazione
+			WHERE cameraRif = 1; 
+		
+			IF (@CheckInIO BETWEEN @CheckIn AND @CheckOut)
+				THROW 50001, 'Prenotazione non consentita', 1	
+
+			IF (@CheckOutIO BETWEEN @CheckIn AND @CheckOut)
+				THROW 50001, 'Prenotazione non consentita', 1
+
+			IF (@CheckInIO = @CheckIn)
+				THROW 50001, 'Prenotazione non consentita', 1
+
+			IF (@CheckOutIO = @CheckOut)
+				THROW 50001, 'Prenotazione non consentita', 1
+			
+			select @CheckIn;
+			select @checkOut;
+			select *
+			from Prenotazione
+			where cameraRif = 1;
+			insert into Prenotazione(cameraRif, cod_fis, check_in, check_out) values
+			(@CameraRif,@ClienteRif,@CheckInIO,@CheckOutIO);
+		COMMIT TRANSACTION
+	END TRY
+    BEGIN CATCH
+        PRINT 'ERRORE'
+		ROLLBACK
+    END CATCH
+END
