@@ -44,3 +44,38 @@ BEGIN
 		ROLLBACK
     END CATCH
 END
+
+
+
+CREATE PROCEDURE InsertPrenotazioneConDatiSporchi
+	@CameraRif int,
+	@ClienteRif varchar,
+    @CheckOutIO Datetime,
+	@CheckInIO dateTime
+AS
+BEGIN
+	DECLARE @contatore int = 0;
+    BEGIN TRY
+		BEGIN TRANSACTION
+			
+			select @contatore = count(*)
+			from prenotazione
+			where cameraRif = @cameraRif
+			and @CheckInIO BETWEEN check_in AND check_out
+			or @CheckOutIO BETWEEN check_in AND check_out
+			or check_in BETWEEN @CheckInIO AND @CheckOutIO
+			or check_out BETWEEN @CheckInIO AND @CheckOutIO;
+
+			IF @contatore = 0
+				insert into Prenotazione(cameraRif, cod_fis, check_in, check_out) values
+				(@CameraRif,@ClienteRif,@CheckInIO,@CheckOutIO);
+			ELSE
+				THROW 50001, 'Prenotazione non consentita', 1
+				
+		COMMIT TRANSACTION
+	END TRY
+    BEGIN CATCH
+        PRINT 'ERRORE'
+		ROLLBACK
+    END CATCH
+END
